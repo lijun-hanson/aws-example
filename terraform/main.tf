@@ -84,15 +84,8 @@ resource "aws_iam_instance_profile" "ec2-ssm-iam-profile" {
 }
 
 resource "aws_security_group" "allow_ssh_web" {
-  name        = "allow_ssh_web"
   vpc_id      = aws_vpc.main.id
-  description = "Allows access to SSH and HTTP/s ports"
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  description = "Allows access to SSH and HTTPs ports"
   ingress {
     from_port   = 443
     to_port     = 443
@@ -116,6 +109,11 @@ resource "aws_security_group" "allow_ssh_web" {
   }
 }
 
+resource "aws_key_pair" "nginx_key" {
+  key_name   = "nginx"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7JaVVqEyrqIlV3K5/dhXYqiGvkBHHCEmqbMYdAU0SHGB7XYQNg4P5DbSrFBtT4hHsnNvaKKClzdp0ZE+VaH3TJprR3cm1UEoKwyDfAIxHalXBsLJ35qyUjpy8vk7FGvbe5OowChoyowEypw1+zNhGZV9IN/r3zd3uc3WIsIyP7W8IGjYNZjGxvCNNXIQ9zLDgo65N5Ik01n8UFTtkh+kxG+z0hT3buCbdqjYotqQCu3Gk9UxR/emDV1Fy7k5IsKW1TGbmhN7vZu9rqAlpn9Ltsf3aRgMOEDm7nvR7umu19rKx8PSQjumeU86N582wFTjieAeS7aqDKCIZmu2yLAf5jtFCIJM8X8XtB+LYrS8Y4GGc0tbnF0EvjEY6RSNKW5gZ86xwhsMQZFNZZJch61kBb4rsBXJMX/zDjEzOobKrgcPd7M82Blk0zoxGZkbsnHZA4a82e8qvKv5RRK/DMkHj2QnDWB4qVv+BqU8wWzPY7cqqKItGRxFjtjMNx7q3+00= MAC@MacBook-Pro.local"
+}
+
 resource "aws_instance" "nginx" {
   ami                         = "ami-0e8fd5cc56e4d158c"
   instance_type               = "t2.micro"
@@ -123,6 +121,8 @@ resource "aws_instance" "nginx" {
   vpc_security_group_ids      = [aws_security_group.allow_ssh_web.id]
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.ec2-ssm-iam-profile.name
+  key_name                    = aws_key_pair.nginx_key.key_name
+
   root_block_device {
     delete_on_termination = true
     volume_type           = "gp3"
@@ -131,9 +131,4 @@ resource "aws_instance" "nginx" {
   tags = {
     Name = "nginx"
   }
-}
-
-resource "aws_ec2_instance_state" "nginx-state" {
-  instance_id = aws_instance.nginx.id
-  state       = "stopped"
 }
