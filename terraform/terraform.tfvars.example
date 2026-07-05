@@ -1,0 +1,25 @@
+# Terraform Variables Configuration
+# Copy this file to terraform.tfvars and update the values as needed.
+# All variables have sensible defaults - only override what you need to change.
+
+# The AWS region to deploy resources into
+# Must be a valid AWS region format (e.g., us-east-1, ap-southeast-2)
+# aws_region = "ap-southeast-2"
+
+# The EC2 instance type for the compute instance
+# instance_type = "t2.micro"
+
+# The CIDR block for the VPC
+# Must be a valid CIDR block (e.g., 10.0.0.0/16)
+# vpc_cidr = "10.0.0.0/16"
+
+# The CIDR block for the public subnet
+# Must be a valid CIDR block and fall within the VPC CIDR range
+# subnet_cidr = "10.0.1.0/24"
+
+# The name of the project, used for resource naming and tagging
+# project_name = "aws-example"
+
+# The deployment environment
+# Must be one of: dev, staging, prod
+# environment = "dev"

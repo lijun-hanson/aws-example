@@ -3,31 +3,58 @@
   gather_facts: yes
   tasks:
   - name: Install nginx
-    yum:
+    ansible.builtin.dnf:
       name: nginx
-      state: latest
+      state: present
 
   - name: Start nginx
-    service:
+    ansible.builtin.service:
       name: nginx
       state: started
+      enabled: true
 
-  - name: Create tls certificates
-    command: >
-      openssl req -new -x509 -nodes -out server.crt -keyout server.key -subj '/CN=localhost' -days 365
-    args:
-      chdir: /etc/nginx
-      creates: /etc/nginx/server.crt
+  - name: Create SSL directory
+    ansible.builtin.file:
+      path: /etc/nginx/ssl
+      state: directory
+      owner: root
+      group: root
+      mode: "0755"
+
+  - name: Generate TLS private key
+    community.crypto.openssl_privatekey:
+      path: /etc/nginx/ssl/server.key
+      size: 2048
+      owner: root
+      group: root
+      mode: "0600"
+    notify: Restart nginx
+
+  - name: Generate CSR
+    community.crypto.openssl_csr_pipe:
+      privatekey_path: /etc/nginx/ssl/server.key
+      common_name: localhost
+    register: csr
+
+  - name: Generate self-signed TLS certificate
+    community.crypto.x509_certificate:
+      path: /etc/nginx/ssl/server.crt
+      privatekey_path: /etc/nginx/ssl/server.key
+      csr_content: "{{ csr.csr }}"
+      provider: selfsigned
+      owner: root
+      group: root
+      mode: "0644"
     notify: Restart nginx
 
   - name: Copy config file
-    template:
+    ansible.builtin.template:
       src: templates/nginx.conf.j2
       dest: /etc/nginx/conf.d/nginx.conf
     notify: Restart nginx
 
   handlers:
   - name: Restart nginx
-    service:
+    ansible.builtin.service:
       name: nginx
       state: restarted

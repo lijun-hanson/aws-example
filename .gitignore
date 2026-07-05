@@ -1,1 +1,9 @@
+# Terraform
 .terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+# Exclude variable files that may contain secrets
+*.tfvars
+# Keep example variable files
+!*.tfvars.example
